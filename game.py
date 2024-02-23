@@ -30,13 +30,14 @@ boundary = {
 snake_head_pos = (5, 5)
 snake_tail = []
 snake_direction = "UP"
-snake_length = 1
+snake_tail_length = 0
 def snake_pos(index):
   return (snake_head_pos[index] * grid_size)
   
 # Food Setup
 food_pos = (random.randint(0, 9), random.randint(0, 9))
 def randomize_food():
+  global food_pos
   food_pos = (random.randint(0, 9), random.randint(0, 9))
 
 
@@ -57,6 +58,8 @@ while not game_over:
               snake_direction = "RIGHT"
 
     
+
+
     if snake_direction == "UP":
       snake_head_pos = (snake_head_pos[0], snake_head_pos[1] - 1)
     elif snake_direction == "DOWN":
@@ -69,20 +72,16 @@ while not game_over:
     if snake_head_pos[0] < boundary["left"] or snake_head_pos[0] > boundary["right"] or snake_head_pos[1] < boundary["top"] or snake_head_pos[1] > boundary["bottom"]:
       game_over = True
 
+    
+    
+
     if snake_head_pos == food_pos:
       randomize_food()
       points += 1
-      snake_length += 1
+      snake_tail_length += 1
 
-    if len(snake_tail) > snake_length:
-      snake_tail.pop(0)
-    elif len(snake_tail) < snake_length:
-      snake_tail.append(snake_head_pos)
+  
 
-    for segment in snake_tail:
-      pygame.draw.rect(screen, white, (segment[0] * grid_size, segment[1] * grid_size, grid_size, grid_size))
-      # if snake_head_pos == segment:
-        # game_over = True
 
     
 
@@ -92,6 +91,11 @@ while not game_over:
     
     pygame.draw.rect(screen, green, (snake_pos(0), snake_pos(1), grid_size, grid_size))
     pygame.draw.rect(screen, white, (food_pos[0] * grid_size, food_pos[1] * grid_size, grid_size, grid_size))
+    print(snake_tail)
+    for segment in snake_tail:
+      pygame.draw.rect(screen, white, (segment[0] * grid_size, segment[1] * grid_size, grid_size, grid_size))
+      if snake_head_pos == segment:
+        game_over = True
     
 
     if game_over:
@@ -113,6 +117,8 @@ while not game_over:
               game_over = False
           elif pygame.key.get_pressed()[pygame.K_ESCAPE]:
                 pygame.quit()
+
+
 
     # Update the display
     pygame.display.flip()
