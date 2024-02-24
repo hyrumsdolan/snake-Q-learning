@@ -1,6 +1,10 @@
 import pygame
 import sys
 import random
+import os
+import argparse
+
+os.environ['SDL_VIDEO_WINDOW_POS'] = "%d,%d" % (1920, 100)
 
 # Initialize Pygame
 pygame.init()
@@ -17,6 +21,7 @@ grid_size = screen_size / 10
 white = (255, 255, 255)
 green = (0, 255, 0)
 black = (0, 0, 0)
+red = (255, 0, 0)
 
 # Boundary Setup
 boundary = {
@@ -40,22 +45,34 @@ def randomize_food():
   global food_pos
   food_pos = (random.randint(0, 9), random.randint(0, 9))
 
+def reset_game():
+  global snake_head_pos, snake_tail, snake_direction, snake_tail_length, game_over, points
+  snake_head_pos = (5, 5)
+  snake_tail = []
+  snake_direction = "UP"
+  snake_tail_length = 0
+  points = 0
+  randomize_food()
+
 
 while not game_over:
+    
+    last_movement_direction = snake_direction
     for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            game_over = True
-        elif event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_ESCAPE:
-                pygame.quit()
-            elif event.key == pygame.K_UP or event.key == pygame.K_w:
-              snake_direction = "UP"
-            elif event.key == pygame.K_DOWN or event.key == pygame.K_s:
-              snake_direction = "DOWN"
-            elif event.key == pygame.K_LEFT or event.key == pygame.K_a:
-              snake_direction = "LEFT"
-            elif event.key == pygame.K_RIGHT or event.key == pygame.K_d:
-              snake_direction = "RIGHT"
+        if event.type == pygame.KEYDOWN:
+          new_direction = None
+          if (event.key == pygame.K_UP or event.key == pygame.K_w) and last_movement_direction != "DOWN":
+              new_direction = "UP"
+          elif (event.key == pygame.K_DOWN or event.key == pygame.K_s) and last_movement_direction != "UP":
+              new_direction = "DOWN"
+          elif (event.key == pygame.K_LEFT or event.key == pygame.K_a) and last_movement_direction != "RIGHT":
+              new_direction = "LEFT"
+          elif (event.key == pygame.K_RIGHT or event.key == pygame.K_d) and last_movement_direction != "LEFT":
+              new_direction = "RIGHT"
+
+    # Only update the direction if it's a valid new direction
+          if new_direction:
+              snake_direction = new_direction
 
     
 
@@ -75,12 +92,7 @@ while not game_over:
     
     
 
-    if snake_head_pos == food_pos:
-      randomize_food()
-      points += 1
-      snake_tail_length += 1
-
-  
+   
 
 
     
@@ -89,21 +101,24 @@ while not game_over:
     # Fill the screen with black
     screen.fill(black)
     
-    pygame.draw.rect(screen, green, (snake_pos(0), snake_pos(1), grid_size, grid_size))
-    pygame.draw.rect(screen, white, (food_pos[0] * grid_size, food_pos[1] * grid_size, grid_size, grid_size))
-    print(snake_tail)
+    
+    pygame.draw.rect(screen, red, (food_pos[0] * grid_size, food_pos[1] * grid_size, grid_size * .95, grid_size * .95))
     for segment in snake_tail:
-      pygame.draw.rect(screen, white, (segment[0] * grid_size, segment[1] * grid_size, grid_size, grid_size))
+      pygame.draw.rect(screen, white, (segment[0] * grid_size, segment[1] * grid_size, grid_size * .95, grid_size * .95))
       if snake_head_pos == segment:
         game_over = True
-    
+    pygame.draw.rect(screen, green, (snake_pos(0), snake_pos(1), grid_size * .95, grid_size * .95))
 
     if game_over:
+      reset_game()
+      screen.fill(black)
       font = pygame.font.Font(None, 60)
       text = font.render('GAME OVER', True, white, black)
       text_rect = text.get_rect()
       text_rect.center = (screen_size // 2, screen_size // 2)
       screen.blit(text, text_rect)
+      
+      
       pygame.display.flip()
 
      
@@ -118,7 +133,17 @@ while not game_over:
           elif pygame.key.get_pressed()[pygame.K_ESCAPE]:
                 pygame.quit()
 
-
+    if snake_head_pos == food_pos:
+      randomize_food()
+      points += 1
+      snake_tail_length += 1
+      snake_tail.append(snake_head_pos)
+       
+    if snake_tail_length > 0:
+      snake_tail.append(snake_head_pos)
+      if len(snake_tail) > snake_tail_length:
+        snake_tail.pop(0)
+  
 
     # Update the display
     pygame.display.flip()
